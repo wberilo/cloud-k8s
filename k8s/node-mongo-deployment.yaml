@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-mongo-deployment
+  namespace: app-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-mongo
+  template:
+    metadata:
+      labels:
+        app: node-mongo
+    spec:
+      containers:
+        - name: node-mongo
+          image: wberilo/db-server
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb-service:27017/mydb"

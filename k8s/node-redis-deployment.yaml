@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-redis-deployment
+  namespace: app-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-redis
+  template:
+    metadata:
+      labels:
+        app: node-redis
+    spec:
+      containers:
+        - name: node-redis
+          image: wberilo/cacheserver
+          env:
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: REDIS_PORT
+              value: "6379"
