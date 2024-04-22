@@ -2,50 +2,63 @@ const express = require('express');
 const axios = require('axios');
 const redis = require('redis');
 
-// Create Redis client
-const redisClient = redis.createClient();
+const redisClient = redis.createClient({
+  host: 'redis-service.default.svc.cluster.local', 
+  port: 6379, 
+  legacyMode: true
+});
 
-// Create Express app
 const app = express();
 const port = 3000;
 
-// Sample API endpoint
 app.get('', (req, res) => {
   res.send('Cache server running');
 })
 
 app.get('/api/data/:key', async (req, res) => {
-  const key = req.params.key; // Get key from request parameters
+  const key = req.params.key; 
+  console.log('Key:', key);
 
-  // Check if data is cached in Redis
-  redisClient.get(key, async (err, cachedData) => {
-    if (err) throw err;
+  try {
+    const cachedData = await new Promise((resolve, reject) => {
+      redisClient.get(key, (err, data) => {
+        if (err) reject(err);
+        resolve(data);
+      });
+
+      setTimeout(() => {
+        reject(new Error('Redis get operation timed out'));
+      }, 5000);
+    });
 
     if (cachedData) {
-      // Data found in Redis cache
       console.log('Data found in cache');
-      res.json(JSON.parse(cachedData)); // Return cached data as JSON response
+      const dataRetrieved = JSON.parse(cachedData);
+      return res.json({responseData:dataRetrieved, cache:true});
     } else {
-      try {
-        // Make request to another program (example: http://localhost:4000)
-        const response = await axios.get('http://localhost:4000/api/otherdata');
-        const responseData = response.data;
+      console.log('Data not found in cache');
+      const response = await axios.get('http://node-mongo-service:3000/users/' + key);
+      const responseData = response.data;
+      console.log('Data fetched from external API', responseData);
 
-        // Cache data in Redis for future requests
-        redisClient.setex(key, 3600, JSON.stringify(responseData)); // Cache for 1 hour
+      await new Promise((resolve, reject) => {
+        redisClient.setex(key, 3600, JSON.stringify(responseData), (err) => {
+          if (err) reject(err);
+          resolve();
+        });
+      });
+      console.log('Data cached in Redis');
 
-        // Return response to client
-        console.log('Data fetched from external API');
-        res.json(responseData);
-      } catch (error) {
-        console.error('Error fetching data:', error.message);
-        res.status(500).send('Error fetching data');
-      }
+      console.log('Data fetched from external API');
+      return res.json({responseData, cache: false});
     }
-  });
+  } catch (error) {
+    console.error('Error fetching data:', error.message);
+    return res.status(500).send('Error fetching data');
+  }
 });
 
-// Start the server
-app.listen(port, () => {
+app.listen(port, async () => {
+  await redisClient.connect();
   console.log(`Server running on port ${port}`);
 });

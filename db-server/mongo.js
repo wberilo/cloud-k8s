@@ -12,21 +12,14 @@ async function connectToMongoDB() {
     await client.connect();
     console.log('Connected to MongoDB');
     db = client.db(dbName);
+    await addEntriesToDb();
+    console.log('Entries added to database');
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
   }
 }
 
 connectToMongoDB();
-async function createCollection() {
-  try {
-    await db.createCollection('enties');
-    console.log('Collection created');
-    await addEntriesToDb(); // Add await keyword here
-  } catch (error) {
-    console.error('Error creating collection:', error);
-  }
-}
 
 async function addEntriesToDb() {
   try {
@@ -35,14 +28,13 @@ async function addEntriesToDb() {
     for (let i = 1; i <= 10; i++) {
       entries.push({ id: i, name: `Entry ${i}` });
     }
-    await collection.insertMany(entries);
-    console.log('Entries added to database');
+    const res = await collection.insertMany(entries);
+    console.log(entries);
+    console.log('Entries added to database', res);
   } catch (error) {
     console.error('Error adding entries to database:', error);
   }
 }
-
-createCollection();
 
 
 function getDb() {

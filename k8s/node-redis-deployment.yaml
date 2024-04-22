@@ -14,6 +14,13 @@ spec:
         app: node-redis
     spec:
       containers:
+        - name: redis
+          image: redis:latest
+          ports:
+          - containerPort: 6379
+          volumeMounts:
+          - mountPath: /srv/www
+            name: redis-storage
         - name: node-redis
           image: wberilo/cacheserver
           env:
@@ -21,3 +28,10 @@ spec:
               value: "redis-service"
             - name: REDIS_PORT
               value: "6379"
+          ports:
+        - containerPort: 3000
+      volumes:
+      - name: redis-storage
+        emptyDir: {}
+
+

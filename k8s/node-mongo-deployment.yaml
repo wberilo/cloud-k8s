@@ -14,8 +14,10 @@ spec:
         app: node-mongo
     spec:
       containers:
-        - name: node-mongo
-          image: wberilo/db-server
-          env:
-            - name: MONGODB_URI
-              value: "mongodb://mongodb-service:27017/mydb"
+      - name: node-mongo
+        image: wberilo/db-server
+        env:
+        - name: MONGODB_URI
+          value: "mongodb://mongodb-service:27017/mydb"
+        ports:
+        - containerPort: 3000
