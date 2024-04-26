@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: svelte-app-service
+spec:
+  ports:
+    - port: 5173
+      targetPort: 80
+  selector:
+    app: svelte-app
+  type: LoadBalancer

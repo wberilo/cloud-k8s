@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-redis-service
+  namespace: app-namespace
+spec:
+  selector:
+    app: node-redis
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
